@@ -1,9 +1,11 @@
 import tkinter as tk
+from datetime import date
+from tkinter import font
+
 import tkcalendar as tkc
 
-from tkinter import font
-from repositories import TaskRepository
 from entities import Task
+from repositories import TaskRepository
 
 
 class App:
@@ -104,7 +106,7 @@ class EditTaskPage(tk.Frame):
     entity: Task
 
     name_entry: tk.Entry
-    due_date_entry: tk.Entry
+    due_date_entry: tkc.DateEntry
     percent_ready_entry: tk.Scale
 
     def __init__(self, gui: tk.Tk, parent: tk.Frame, controller: App, task_repository: TaskRepository):
@@ -122,6 +124,7 @@ class EditTaskPage(tk.Frame):
 
         title = tk.StringVar()
         title.set(self.entity.title)
+        due = self.entity.due_date
         percent_ready = tk.IntVar()
         percent_ready.set(self.entity.percent_ready)
 
@@ -129,7 +132,7 @@ class EditTaskPage(tk.Frame):
         self.name_entry = tk.Entry(self, textvariable=title, font=('calibre', 10, 'normal'))
 
         due_date_label = tk.Label(self, text='Due date', font=('calibre', 10, 'bold'))
-        self.due_date_entry = tkc.DateEntry(self, date_pattern="dd-mm-yyyy")
+        self.due_date_entry = tkc.DateEntry(self, year=due.year, month=due.month, day=due.day, date_pattern="dd-mm-yyyy", mindate=date.today())
 
         percent_ready_label = tk.Label(self, text='Due date', font=('calibre', 10, 'bold'))
         self.percent_ready_entry = tk.Scale(self, from_=0, to=100, variable=percent_ready, orient='horizontal')
@@ -150,4 +153,9 @@ class EditTaskPage(tk.Frame):
 
     def save(self):
         self.entity.title = self.name_entry.get()
+        self.entity.due_date = self.due_date_entry.get_date()
         self.entity.percent_ready = self.percent_ready_entry.get()
+
+        self.task_repository.update(self.entity)
+
+        self.controller.show_list_tasks_page()

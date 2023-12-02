@@ -33,6 +33,7 @@ class TaskRepository:
 
     def update(self, entity: Task) -> Task:
         with Session(self.engine) as session:
+            session.add(entity)
             session.commit()
             session.close()
 
