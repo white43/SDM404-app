@@ -6,7 +6,7 @@ from tkinter import font, messagebox
 import tkcalendar as tkc
 
 from entities import Task
-from notifications import Notification
+from notifications import BaseNotification
 from repositories import TaskRepository
 from validation import ValidationException, TaskValidator
 
@@ -17,7 +17,7 @@ class App:
     list_tasks_page = None
     task_page = None
 
-    def __init__(self, gui: tk.Tk, task_repository: TaskRepository, task_validator: TaskValidator, notifications: Notification):
+    def __init__(self, gui: tk.Tk, task_repository: TaskRepository, task_validator: TaskValidator, notifications: BaseNotification):
         self.title_font = font.Font(family='Helvetica', size=18, weight="bold", slant="italic")
 
         container = tk.Frame(gui)
@@ -73,6 +73,7 @@ class ListTasksPage(tk.Frame):
     def reset_page(self) -> None:
         for child in self.grid_slaves():
             child.grid_forget()
+            child.destroy()
 
     def draw_page(self) -> None:
         entities = self.task_repository.get_all()
@@ -129,6 +130,7 @@ class ListTasksPage(tk.Frame):
         if isinstance(entity, Task) and self.task_repository.delete(entity):
             for child in self.grid_slaves(row=row_id):
                 child.grid_forget()
+                child.destroy()
 
 
 class TaskPage(tk.Frame):
@@ -150,7 +152,7 @@ class TaskPage(tk.Frame):
             controller: App,
             task_repository: TaskRepository,
             task_validator: TaskValidator,
-            notifications: Notification,
+            notifications: BaseNotification,
     ):
         tk.Frame.__init__(self, parent)
         self.gui = gui
@@ -162,6 +164,7 @@ class TaskPage(tk.Frame):
     def reset_page(self) -> None:
         for child in self.grid_slaves():
             child.grid_forget()
+            child.destroy()
 
     def draw_page(self, row_id: int | None) -> None:
         title: tk.StringVar = tk.StringVar()
@@ -184,7 +187,7 @@ class TaskPage(tk.Frame):
         self.due_date_entry = tkc.DateEntry(self, year=due.year, month=due.month, day=due.day,
                                             date_pattern="dd-mm-yyyy", mindate=date.today())
 
-        percent_ready_label = tk.Label(self, text='Due date', font=('calibre', 10, 'bold'))
+        percent_ready_label = tk.Label(self, text='Percent Ready', font=('calibre', 10, 'bold'))
         self.percent_ready_entry = tk.Scale(self, from_=0, to=100, variable=percent_ready, orient='horizontal')
 
         sub_btn = tk.Button(self, text='Submit', command=lambda: self.save(True if row_id is not None else False))
