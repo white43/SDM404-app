@@ -5,6 +5,7 @@ from tkinter import font
 import tkcalendar as tkc
 
 from entities import Task
+from notifications import Notification
 from repositories import TaskRepository
 
 
@@ -14,7 +15,7 @@ class App:
     list_tasks_page = None
     task_page = None
 
-    def __init__(self, gui: tk.Tk, task_repository: TaskRepository):
+    def __init__(self, gui: tk.Tk, task_repository: TaskRepository, notifications: Notification):
         self.title_font = font.Font(family='Helvetica', size=18, weight="bold", slant="italic")
 
         container = tk.Frame(gui)
@@ -22,9 +23,21 @@ class App:
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
-        self.list_tasks_page = ListTasksPage(gui=gui, parent=container, controller=self,
-                                             task_repository=task_repository)
-        self.task_page = TaskPage(gui=gui, parent=container, controller=self, task_repository=task_repository)
+        self.list_tasks_page = ListTasksPage(
+            gui=gui,
+            parent=container,
+            controller=self,
+            task_repository=task_repository,
+            notifications=notifications,
+        )
+
+        self.task_page = TaskPage(
+            gui=gui,
+            parent=container,
+            controller=self,
+            task_repository=task_repository,
+            notifications=notifications,
+        )
 
         for page in (self.list_tasks_page, self.task_page):
             page.grid(row=0, column=0, sticky="nsew")
@@ -49,11 +62,12 @@ class ListTasksPage(tk.Frame):
     controller: App
     task_repository: TaskRepository
 
-    def __init__(self, gui: tk.Tk, parent: tk.Frame, controller: App, task_repository: TaskRepository):
+    def __init__(self, gui: tk.Tk, parent: tk.Frame, controller: App, task_repository: TaskRepository, notifications: Notification):
         tk.Frame.__init__(self, parent)
         self.gui = gui
         self.controller = controller
         self.task_repository = task_repository
+        self.notifications = notifications
 
     def reset_page(self) -> None:
         for child in self.grid_slaves():
@@ -123,11 +137,12 @@ class TaskPage(tk.Frame):
     due_date_entry: tkc.DateEntry
     percent_ready_entry: tk.Scale
 
-    def __init__(self, gui: tk.Tk, parent: tk.Frame, controller: App, task_repository: TaskRepository):
+    def __init__(self, gui: tk.Tk, parent: tk.Frame, controller: App, task_repository: TaskRepository, notifications: Notification):
         tk.Frame.__init__(self, parent)
         self.gui = gui
         self.controller = controller
         self.task_repository = task_repository
+        self.notifications = notifications
 
     def reset_page(self) -> None:
         for child in self.grid_slaves():
@@ -182,6 +197,11 @@ class TaskPage(tk.Frame):
             self.task_repository.update(self.entity)
         else:
             self.task_repository.insert(self.entity)
+
+            self.notifications.info(
+                "New task",
+                "A new task %s with due date on %s has been added" % (self.entity.title, self.entity.due_date.strftime("%d/%m/%Y"))
+            )
 
         self.controller.show_list_tasks_page()
 
