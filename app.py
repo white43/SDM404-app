@@ -79,8 +79,8 @@ class ListTasksPage(tk.Frame):
             due_date = tk.Label(self, text=str(entity.due_date))
             percent_ready = tk.Label(self, text=str(entity.percent_ready))
 
-            edit_button = tk.Button(self, text="Edit", command=lambda val=entity.id: self.edit(val))
-            delete_button = tk.Button(self, text="Delete", command=lambda val=entity.id: self.delete(val))
+            edit_button = tk.Button(self, text="Edit", command=lambda eid=entity.id: self.edit(eid))
+            delete_button = tk.Button(self, text="Delete", command=lambda eid=entity.id, rid=row_id: self.delete(eid, rid))
 
             id.grid(row=row_id, column=0)
             title.grid(row=row_id, column=1)
@@ -100,12 +100,12 @@ class ListTasksPage(tk.Frame):
     def add(self):
         self.controller.show_add_task_page()
 
-    def edit(self, row_id: int) -> None:
-        self.controller.show_edit_task_page(row_id)
+    def edit(self, entity_id: int) -> None:
+        self.controller.show_edit_task_page(entity_id)
         pass
 
-    def delete(self, row_id: int) -> None:
-        entity = self.task_repository.get_by_id(row_id)
+    def delete(self, entity_id: int, row_id: int) -> None:
+        entity = self.task_repository.get_by_id(entity_id)
 
         if isinstance(entity, Task) and self.task_repository.delete(entity):
             for child in self.grid_slaves(row=row_id):
