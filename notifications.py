@@ -1,6 +1,6 @@
-import os
-
 from notifypy import Notify
+
+from utils import resource_path
 
 
 class Notification:
@@ -15,6 +15,6 @@ class Notification:
             supplied_message=message,
             supplied_application_name="Student Task Scheduler",
             supplied_urgency="normal",
-            supplied_icon_path=os.path.join(os.getcwd(), "assets", "information-icon.png"),
+            supplied_icon_path=resource_path("assets", "information-icon.png"),
             supplied_audio_path="",
         )
