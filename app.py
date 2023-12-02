@@ -8,7 +8,7 @@ import tkcalendar as tkc
 from entities import Task
 from notifications import Notification
 from repositories import TaskRepository
-from validation import ValidationException
+from validation import ValidationException, TaskValidator
 
 
 class App:
@@ -17,7 +17,7 @@ class App:
     list_tasks_page = None
     task_page = None
 
-    def __init__(self, gui: tk.Tk, task_repository: TaskRepository, notifications: Notification):
+    def __init__(self, gui: tk.Tk, task_repository: TaskRepository, task_validator: TaskValidator, notifications: Notification):
         self.title_font = font.Font(family='Helvetica', size=18, weight="bold", slant="italic")
 
         container = tk.Frame(gui)
@@ -30,7 +30,6 @@ class App:
             parent=container,
             controller=self,
             task_repository=task_repository,
-            notifications=notifications,
         )
 
         self.task_page = TaskPage(
@@ -38,6 +37,7 @@ class App:
             parent=container,
             controller=self,
             task_repository=task_repository,
+            task_validator=task_validator,
             notifications=notifications,
         )
 
@@ -64,12 +64,11 @@ class ListTasksPage(tk.Frame):
     controller: App
     task_repository: TaskRepository
 
-    def __init__(self, gui: tk.Tk, parent: tk.Frame, controller: App, task_repository: TaskRepository, notifications: Notification):
+    def __init__(self, gui: tk.Tk, parent: tk.Frame, controller: App, task_repository: TaskRepository):
         tk.Frame.__init__(self, parent)
         self.gui = gui
         self.controller = controller
         self.task_repository = task_repository
-        self.notifications = notifications
 
     def reset_page(self) -> None:
         for child in self.grid_slaves():
@@ -136,6 +135,7 @@ class TaskPage(tk.Frame):
     gui: tk.Tk
     controller: App
     task_repository: TaskRepository
+    task_validator: TaskValidator
 
     entity: Task
 
@@ -143,11 +143,20 @@ class TaskPage(tk.Frame):
     due_date_entry: tkc.DateEntry
     percent_ready_entry: tk.Scale
 
-    def __init__(self, gui: tk.Tk, parent: tk.Frame, controller: App, task_repository: TaskRepository, notifications: Notification):
+    def __init__(
+            self,
+            gui: tk.Tk,
+            parent: tk.Frame,
+            controller: App,
+            task_repository: TaskRepository,
+            task_validator: TaskValidator,
+            notifications: Notification,
+    ):
         tk.Frame.__init__(self, parent)
         self.gui = gui
         self.controller = controller
         self.task_repository = task_repository
+        self.task_validator = task_validator
         self.notifications = notifications
 
     def reset_page(self) -> None:
@@ -208,8 +217,10 @@ class TaskPage(tk.Frame):
             self.entity.percent_ready = self.percent_ready_entry.get()
 
             if update:
+                self.task_validator.validate_entity(self.entity, "update")
                 self.task_repository.update(self.entity)
             else:
+                self.task_validator.validate_entity(self.entity, "insert")
                 self.task_repository.insert(self.entity)
 
                 self.notifications.info(

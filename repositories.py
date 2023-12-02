@@ -1,5 +1,6 @@
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
+
 from entities import Task
 
 
@@ -13,6 +14,12 @@ class TaskRepository:
         entity = self.session.scalars(stmt).one_or_none()
 
         return entity
+
+    def title_already_present_in_database(self, title: str) -> bool:
+        stmt = select(Task).where(Task.title == title)
+        entity = self.session.scalars(stmt).one_or_none()
+
+        return False if entity is None else True
 
     def get_all(self) -> list[Task]:
         stmt = select(Task)
