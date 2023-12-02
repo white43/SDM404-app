@@ -33,6 +33,7 @@ class App:
         self.show_list_tasks_page()
 
     def show_list_tasks_page(self):
+        self.list_tasks_page.redraw_page()
         self.list_tasks_page.tkraise()
 
     def show_edit_task_page(self, row_id: int):
@@ -41,14 +42,22 @@ class App:
 
 
 class ListTasksPage(tk.Frame):
+    gui: tk.Tk
+    controller: App
     task_repository: TaskRepository
 
     def __init__(self, gui: tk.Tk, parent: tk.Frame, controller: App, task_repository: TaskRepository):
         tk.Frame.__init__(self, parent)
+        self.gui = gui
         self.controller = controller
         self.task_repository = task_repository
 
-        entities = task_repository.get_all()
+    def reset_page(self) -> None:
+        for child in self.grid_slaves():
+            child.grid_forget()
+
+    def draw_page(self) -> None:
+        entities = self.task_repository.get_all()
 
         self.grid_columnconfigure(1, weight=1)
 
@@ -74,6 +83,10 @@ class ListTasksPage(tk.Frame):
             percent_ready.grid(row=entity.id, column=3)
             edit_button.grid(row=entity.id, column=4)
             delete_button.grid(row=entity.id, column=5)
+
+    def redraw_page(self) -> None:
+        self.reset_page()
+        self.draw_page()
 
     def edit(self, row_id: int) -> None:
         self.controller.show_edit_task_page(row_id)
