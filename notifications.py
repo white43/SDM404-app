@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from notifypy import Notify
 
 from utils import resource_path
@@ -10,11 +12,9 @@ class Notification:
         self.notifier = notifier
 
     def info(self, title: str, message: str):
-        self.notifier.send_notification(
-            supplied_title=title,
-            supplied_message=message,
-            supplied_application_name="Student Task Scheduler",
-            supplied_urgency="normal",
-            supplied_icon_path=resource_path("assets", "information-icon.png"),
-            supplied_audio_path="",
-        )
+        notifier = deepcopy(self.notifier)
+        notifier.title = title
+        notifier.message = message
+        notifier.application_name = "Student Task Scheduler"
+        notifier.icon = resource_path("assets", "information-icon.png")
+        notifier.send(block=False)
