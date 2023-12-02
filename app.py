@@ -110,8 +110,12 @@ class ListTasksPage(tk.Frame):
         tk.Button(self, text="Add Task", command=self.add).grid(row=row_id, column=4, columnspan=2)
 
     def redraw_page(self) -> None:
+        self.set_title()
         self.reset_page()
         self.draw_page()
+
+    def set_title(self):
+        self.gui.title("Student Task Scheduler")
 
     def add(self):
         self.controller.show_add_task_page()
@@ -188,7 +192,14 @@ class TaskPage(tk.Frame):
 
     def redraw_page(self, row_id: int | None) -> None:
         self.reset_page()
-        self.draw_page(row_id=row_id)
+        self.set_title(row_id)
+        self.draw_page(row_id)
+
+    def set_title(self, row_id: int | None):
+        if row_id is None:
+            self.gui.title("Add Task | Student Task Scheduler")
+        else:
+            self.gui.title("Edit Task | Student Task Scheduler")
 
     def save(self, update: bool):
         try:
