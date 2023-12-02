@@ -12,8 +12,7 @@ class App:
     pages: dict[str, tk.Frame] = {}
 
     list_tasks_page = None
-    add_task_page = None
-    edit_task_page = None
+    task_page = None
 
     def __init__(self, gui: tk.Tk, task_repository: TaskRepository):
         self.title_font = font.Font(family='Helvetica', size=18, weight="bold", slant="italic")
@@ -23,11 +22,11 @@ class App:
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
-        self.list_tasks_page = ListTasksPage(gui=gui, parent=container, controller=self, task_repository=task_repository)
-        self.add_task_page = AddTaskPage(gui=gui, parent=container, controller=self, task_repository=task_repository)
-        self.edit_task_page = EditTaskPage(gui=gui, parent=container, controller=self, task_repository=task_repository)
+        self.list_tasks_page = ListTasksPage(gui=gui, parent=container, controller=self,
+                                             task_repository=task_repository)
+        self.task_page = TaskPage(gui=gui, parent=container, controller=self, task_repository=task_repository)
 
-        for page in (self.list_tasks_page, self.add_task_page, self.edit_task_page):
+        for page in (self.list_tasks_page, self.task_page):
             page.grid(row=0, column=0, sticky="nsew")
 
         self.show_list_tasks_page()
@@ -36,9 +35,13 @@ class App:
         self.list_tasks_page.redraw_page()
         self.list_tasks_page.tkraise()
 
-    def show_edit_task_page(self, row_id: int):
-        self.edit_task_page.redraw_page(row_id)
-        self.edit_task_page.tkraise()
+    def show_add_task_page(self):
+        self.task_page.redraw_page(None)
+        self.task_page.tkraise()
+
+    def show_edit_task_page(self, row_id: int | None):
+        self.task_page.redraw_page(row_id)
+        self.task_page.tkraise()
 
 
 class ListTasksPage(tk.Frame):
@@ -68,6 +71,8 @@ class ListTasksPage(tk.Frame):
         tk.Label(self, text="Edit").grid(row=0, column=4)
         tk.Label(self, text="Delete").grid(row=0, column=5)
 
+        row_id: int = 1
+
         for entity in entities:
             id = tk.Label(self, text=entity.id)
             title = tk.Label(self, text=entity.title)
@@ -77,16 +82,23 @@ class ListTasksPage(tk.Frame):
             edit_button = tk.Button(self, text="Edit", command=lambda val=entity.id: self.edit(val))
             delete_button = tk.Button(self, text="Delete", command=lambda val=entity.id: self.delete(val))
 
-            id.grid(row=entity.id, column=0)
-            title.grid(row=entity.id, column=1)
-            due_date.grid(row=entity.id, column=2)
-            percent_ready.grid(row=entity.id, column=3)
-            edit_button.grid(row=entity.id, column=4)
-            delete_button.grid(row=entity.id, column=5)
+            id.grid(row=row_id, column=0)
+            title.grid(row=row_id, column=1)
+            due_date.grid(row=row_id, column=2)
+            percent_ready.grid(row=row_id, column=3)
+            edit_button.grid(row=row_id, column=4)
+            delete_button.grid(row=row_id, column=5)
+
+            row_id += 1
+
+        tk.Button(self, text="Add Task", command=self.add).grid(row=row_id, column=4, columnspan=2)
 
     def redraw_page(self) -> None:
         self.reset_page()
         self.draw_page()
+
+    def add(self):
+        self.controller.show_add_task_page()
 
     def edit(self, row_id: int) -> None:
         self.controller.show_edit_task_page(row_id)
@@ -100,18 +112,7 @@ class ListTasksPage(tk.Frame):
                 child.grid_forget()
 
 
-class AddTaskPage(tk.Frame):
-    def __init__(self, gui: tk.Tk, parent: tk.Frame, controller: App, task_repository: TaskRepository):
-        tk.Frame.__init__(self, parent)
-        # self.controller = controller
-        label = tk.Label(self, text="This is page 1", font=controller.title_font)
-        label.pack(side="top", fill="x", pady=10)
-        button = tk.Button(self, text="Go to the start page",
-                           command=lambda: controller.show_frame(ListTasksPage.__name__))
-        button.pack()
-
-
-class EditTaskPage(tk.Frame):
+class TaskPage(tk.Frame):
     gui: tk.Tk
     controller: App
     task_repository: TaskRepository
@@ -132,25 +133,31 @@ class EditTaskPage(tk.Frame):
         for child in self.grid_slaves():
             child.grid_forget()
 
-    def draw_page(self, row_id: int) -> None:
-        self.entity = self.task_repository.get_by_id(row_id)
-
-        title = tk.StringVar()
-        title.set(self.entity.title)
-        due = self.entity.due_date
+    def draw_page(self, row_id: int | None) -> None:
+        title: tk.StringVar = tk.StringVar()
+        due: date = date.today()
         percent_ready = tk.IntVar()
-        percent_ready.set(self.entity.percent_ready)
+
+        if row_id is not None:
+            self.entity = self.task_repository.get_by_id(row_id)
+
+            title.set(self.entity.title)
+            due = self.entity.due_date
+            percent_ready.set(self.entity.percent_ready)
+        else:
+            self.entity = Task()
 
         name_label = tk.Label(self, text='Title', font=('calibre', 10, 'bold'))
         self.name_entry = tk.Entry(self, textvariable=title, font=('calibre', 10, 'normal'))
 
         due_date_label = tk.Label(self, text='Due date', font=('calibre', 10, 'bold'))
-        self.due_date_entry = tkc.DateEntry(self, year=due.year, month=due.month, day=due.day, date_pattern="dd-mm-yyyy", mindate=date.today())
+        self.due_date_entry = tkc.DateEntry(self, year=due.year, month=due.month, day=due.day,
+                                            date_pattern="dd-mm-yyyy", mindate=date.today())
 
         percent_ready_label = tk.Label(self, text='Due date', font=('calibre', 10, 'bold'))
         self.percent_ready_entry = tk.Scale(self, from_=0, to=100, variable=percent_ready, orient='horizontal')
 
-        sub_btn = tk.Button(self, text='Submit', command=lambda: self.save())
+        sub_btn = tk.Button(self, text='Submit', command=lambda: self.save(True if row_id is not None else False))
         cancel_btn = tk.Button(self, text='Cancel', command=lambda: self.cancel())
 
         name_label.grid(row=0, column=0)
@@ -162,16 +169,19 @@ class EditTaskPage(tk.Frame):
         sub_btn.grid(row=3, column=0)
         cancel_btn.grid(row=3, column=1)
 
-    def redraw_page(self, row_id: int) -> None:
+    def redraw_page(self, row_id: int | None) -> None:
         self.reset_page()
         self.draw_page(row_id=row_id)
 
-    def save(self):
+    def save(self, update: bool):
         self.entity.title = self.name_entry.get()
         self.entity.due_date = self.due_date_entry.get_date()
         self.entity.percent_ready = self.percent_ready_entry.get()
 
-        self.task_repository.update(self.entity)
+        if update:
+            self.task_repository.update(self.entity)
+        else:
+            self.task_repository.insert(self.entity)
 
         self.controller.show_list_tasks_page()
 
