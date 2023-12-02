@@ -151,6 +151,7 @@ class EditTaskPage(tk.Frame):
         self.percent_ready_entry = tk.Scale(self, from_=0, to=100, variable=percent_ready, orient='horizontal')
 
         sub_btn = tk.Button(self, text='Submit', command=lambda: self.save())
+        cancel_btn = tk.Button(self, text='Cancel', command=lambda: self.cancel())
 
         name_label.grid(row=0, column=0)
         self.name_entry.grid(row=0, column=1)
@@ -158,7 +159,8 @@ class EditTaskPage(tk.Frame):
         self.due_date_entry.grid(row=1, column=1)
         percent_ready_label.grid(row=2, column=0)
         self.percent_ready_entry.grid(row=2, column=1)
-        sub_btn.grid(row=3, column=1)
+        sub_btn.grid(row=3, column=0)
+        cancel_btn.grid(row=3, column=1)
 
     def redraw_page(self, row_id: int) -> None:
         self.reset_page()
@@ -171,4 +173,7 @@ class EditTaskPage(tk.Frame):
 
         self.task_repository.update(self.entity)
 
+        self.controller.show_list_tasks_page()
+
+    def cancel(self):
         self.controller.show_list_tasks_page()
