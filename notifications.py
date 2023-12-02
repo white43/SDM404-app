@@ -13,7 +13,7 @@ class Notification:
         self.notifier.send_notification(
             supplied_title=title,
             supplied_message=message,
-            supplied_application_name="",
+            supplied_application_name="Student Task Scheduler",
             supplied_urgency="normal",
             supplied_icon_path=os.path.join(os.getcwd(), "assets", "information-icon.png"),
             supplied_audio_path="",
