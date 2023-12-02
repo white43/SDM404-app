@@ -1,12 +1,14 @@
+import sys
 import tkinter as tk
 from datetime import date
-from tkinter import font
+from tkinter import font, messagebox
 
 import tkcalendar as tkc
 
 from entities import Task
 from notifications import Notification
 from repositories import TaskRepository
+from validation import ValidationException
 
 
 class App:
@@ -189,21 +191,28 @@ class TaskPage(tk.Frame):
         self.draw_page(row_id=row_id)
 
     def save(self, update: bool):
-        self.entity.title = self.name_entry.get()
-        self.entity.due_date = self.due_date_entry.get_date()
-        self.entity.percent_ready = self.percent_ready_entry.get()
+        try:
+            self.entity.title = self.name_entry.get()
+            self.entity.due_date = self.due_date_entry.get_date()
+            self.entity.percent_ready = self.percent_ready_entry.get()
 
-        if update:
-            self.task_repository.update(self.entity)
-        else:
-            self.task_repository.insert(self.entity)
+            if update:
+                self.task_repository.update(self.entity)
+            else:
+                self.task_repository.insert(self.entity)
 
-            self.notifications.info(
-                "New task",
-                "A new task %s with due date on %s has been added" % (self.entity.title, self.entity.due_date.strftime("%d/%m/%Y"))
-            )
+                self.notifications.info(
+                    "New task",
+                    "A new task %s with due date on %s has been added" % (
+                    self.entity.title, self.entity.due_date.strftime("%d/%m/%Y"))
+                )
 
-        self.controller.show_list_tasks_page()
+            self.controller.show_list_tasks_page()
+        except ValidationException as e:
+            messagebox.showerror("Error", e.message)
+        except Exception as e:
+            messagebox.showerror("Error", "Error occurred")
+            print("Error: could not save " + repr(e), file=sys.stderr)
 
     def cancel(self):
         self.controller.show_list_tasks_page()
