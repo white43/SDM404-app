@@ -184,7 +184,7 @@ class TaskPage(tk.Frame):
         self.due_date_entry = tkc.DateEntry(self, year=due.year, month=due.month, day=due.day,
                                             date_pattern="dd-mm-yyyy", mindate=date.today())
 
-        percent_ready_label = tk.Label(self, text='Due date', font=('calibre', 10, 'bold'))
+        percent_ready_label = tk.Label(self, text='Percent Ready', font=('calibre', 10, 'bold'))
         self.percent_ready_entry = tk.Scale(self, from_=0, to=100, variable=percent_ready, orient='horizontal')
 
         sub_btn = tk.Button(self, text='Submit', command=lambda: self.save(True if row_id is not None else False))
