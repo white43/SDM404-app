@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Date, SmallInteger, String
+from sqlalchemy import Date, SmallInteger, String, BLOB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -16,6 +16,8 @@ class Task(Base):
     title: Mapped[str] = mapped_column(String(100))
     percent_ready: Mapped[int] = mapped_column(SmallInteger)
     due_date: Mapped[datetime.date] = mapped_column(Date(), server_default=func.now())
+    file_path: Mapped[str] = mapped_column(String(255), nullable=True)
+    file_contents: Mapped[str] = mapped_column(BLOB(), nullable=True)
 
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, title={self.title!r}, percent_ready={self.percent_ready!r}), due_date={self.due_date!r})"

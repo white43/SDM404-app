@@ -4,17 +4,17 @@ import unittest
 
 from sqlalchemy import create_engine
 
-from app import App, ListTasksPage, TaskPage
-from entities import Base
-from notifications import BaseNotification
-from repositories import TaskRepository
-from validation import TaskValidator
+from src.app import App, ListTasksPage, TaskPage
+from src.entities import Base
+from src.notifications import BaseNotification
+from src.repositories import TaskRepository
+from src.validation import TaskValidator
 
 TITLE_FIELD_1 = "!entry"
 TITLE_FIELD_2 = "!entry2"
 ADD_TASK_BUTTON_1 = "!button"
-SUBMIT_BUTTON_1 = "!button"
-SUBMIT_BUTTON_2 = "!button3"
+SUBMIT_BUTTON_1 = "!button2"
+SUBMIT_BUTTON_2 = "!button5"
 DELETE_BUTTON_1 = "!button6"
 DELETE_BUTTON_2 = "!button8"
 
@@ -74,7 +74,7 @@ class MyGui(unittest.TestCase):
         self.assertEqual(title, expected)
 
         # Empty task page should contain 8 elements
-        self.assertEqual(8, len(task_page.children))
+        self.assertEqual(10, len(task_page.children))
 
         # Insert text "Test" in to the title field
         task_page.children[TITLE_FIELD_1].delete(0, tk.END)

@@ -1,5 +1,7 @@
-from entities import Task
-from repositories import TaskRepository
+from sqlalchemy import BLOB
+
+from src.entities import Task
+from src.repositories import TaskRepository
 
 
 class ValidationException(Exception):

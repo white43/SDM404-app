@@ -1,14 +1,15 @@
+import os.path
 import sys
 import tkinter as tk
 from datetime import date
-from tkinter import font, messagebox
+from tkinter import font, messagebox, filedialog
 
 import tkcalendar as tkc
 
-from entities import Task
-from notifications import BaseNotification
-from repositories import TaskRepository
-from validation import ValidationException, TaskValidator
+from src.entities import Task
+from src.notifications import BaseNotification
+from src.repositories import TaskRepository
+from src.validation import ValidationException, TaskValidator
 
 
 class App:
@@ -144,6 +145,8 @@ class TaskPage(tk.Frame):
     name_entry: tk.Entry
     due_date_entry: tkc.DateEntry
     percent_ready_entry: tk.Scale
+    file_path: str | None = None
+    file_contents: bytes | None = None
 
     def __init__(
             self,
@@ -190,6 +193,8 @@ class TaskPage(tk.Frame):
         percent_ready_label = tk.Label(self, text='Percent Ready', font=('calibre', 10, 'bold'))
         self.percent_ready_entry = tk.Scale(self, from_=0, to=100, variable=percent_ready, orient='horizontal')
 
+        file_label = tk.Label(self, text="Add file", font=('calibre', 10, 'bold'))
+        self.file_entry = tk.Button(self, text="File", command=lambda: self.select_file())
         sub_btn = tk.Button(self, text='Submit', command=lambda: self.save(True if row_id is not None else False))
         cancel_btn = tk.Button(self, text='Cancel', command=lambda: self.cancel())
 
@@ -199,8 +204,10 @@ class TaskPage(tk.Frame):
         self.due_date_entry.grid(row=1, column=1)
         percent_ready_label.grid(row=2, column=0)
         self.percent_ready_entry.grid(row=2, column=1)
-        sub_btn.grid(row=3, column=0)
-        cancel_btn.grid(row=3, column=1)
+        file_label.grid(row=3, column=0)
+        self.file_entry.grid(row=3, column=1)
+        sub_btn.grid(row=4, column=0)
+        cancel_btn.grid(row=4, column=1)
 
     def redraw_page(self, row_id: int | None) -> None:
         self.reset_page()
@@ -218,6 +225,12 @@ class TaskPage(tk.Frame):
             self.entity.title = self.name_entry.get()
             self.entity.due_date = self.due_date_entry.get_date()
             self.entity.percent_ready = self.percent_ready_entry.get()
+
+            if self.file_path is not None and len(self.file_path) > 0:
+                self.entity.file_path = self.file_path
+
+            if self.file_contents is not None and len(self.file_contents) > 0:
+                self.entity.file_contents = self.file_contents
 
             if update:
                 self.task_validator.validate_entity(self.entity, "update")
@@ -241,3 +254,23 @@ class TaskPage(tk.Frame):
 
     def cancel(self):
         self.controller.show_list_tasks_page()
+
+    def select_file(self):
+        filetypes = (
+            ('PDF files', '*.pdf'),
+            ('XSLX files', '*.xslx'),
+            ('ODT files', '*.odt'),
+            ('All files', '*.*'),
+        )
+
+        filename = filedialog.askopenfilename(
+            title='Open a file',
+            initialdir='/',
+            filetypes=filetypes,
+        )
+
+        if os.path.exists(filename):
+            self.file_path = filename
+
+            fd = open(filename, mode="rb")
+            self.file_contents = fd.read()

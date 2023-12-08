@@ -3,11 +3,11 @@ import tkinter as tk
 from notifypy import Notify
 from sqlalchemy import create_engine
 
-from app import App
-from entities import Base
-from notifications import Notification
-from repositories import TaskRepository
-from validation import TaskValidator
+from src.app import App
+from src.entities import Base
+from src.notifications import Notification
+from src.repositories import TaskRepository
+from src.validation import TaskValidator
 
 if __name__ == '__main__':
     db = create_engine("sqlite:///foo.db", echo=True)

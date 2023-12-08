@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from notifypy import Notify
 
-from utils import resource_path
+from src.utils import resource_path
 
 
 class BaseNotification:
