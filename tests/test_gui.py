@@ -2,10 +2,14 @@ import os.path
 import tkinter as tk
 import unittest
 
+from events import Events
 from sqlalchemy import create_engine
 
-from src.app import App, ListTasksPage, TaskPage
+from src.app import App
 from src.entities import Base
+from src.frames.task_frame import TaskFrame
+from src.frames.task_list_frame import TaskListFrame
+from src.gui import gui
 from src.notifications import BaseNotification
 from src.repositories import TaskRepository
 from src.validation import TaskValidator
@@ -32,11 +36,17 @@ class MyGui(unittest.TestCase):
         task_validator = TaskValidator(task_repository)
         Base.metadata.create_all(db)
         notifications = BaseNotification()
+        self.gui, main_frame = gui()
+        self.events = Events()
 
-        self.gui = tk.Tk()
-        self.gui.geometry("640x480")
+        task_list_frame = TaskListFrame(self.gui, main_frame, self.events, task_repository)
+        task_frame = TaskFrame(self.gui, main_frame, self.events, task_repository, task_validator, notifications)
 
-        App(self.gui, task_repository, task_validator, notifications)
+        app = App(task_list_frame, task_frame)
+
+        self.events.on_show_list_tasks_page += app.show_list_tasks_page
+        self.events.on_show_add_task_page += app.show_add_task_page
+        self.events.on_show_edit_task_page += app.show_edit_task_page
 
         self._start_app()
 
@@ -56,17 +66,17 @@ class MyGui(unittest.TestCase):
 
         pages = top['!frame'].children
 
-        self.assertIsInstance(pages['!listtaskspage'], ListTasksPage)
-        self.assertIsInstance(pages['!taskpage'], TaskPage)
+        self.assertIsInstance(pages['!tasklistframe'], TaskListFrame)
+        self.assertIsInstance(pages['!taskframe'], TaskFrame)
 
-        list_tasks_page = pages['!listtaskspage']
-        task_page = pages['!taskpage']
+        task_list_page = pages['!tasklistframe']
+        task_page = pages['!taskframe']
 
         # The window contains 7 elements (table head + add task button)
-        self.assertEqual(7, len(list_tasks_page.children))
+        self.assertEqual(7, len(task_list_page.children))
 
         # Simulate a click on the Add Task Button
-        list_tasks_page.children[ADD_TASK_BUTTON_1].invoke()
+        task_list_page.children[ADD_TASK_BUTTON_1].invoke()
 
         # The main window should change its title
         title = self.gui.winfo_toplevel().title()
@@ -89,10 +99,10 @@ class MyGui(unittest.TestCase):
         self.assertEqual(title, expected)
 
         # The window contains 13 elements (table head + one row + add task button)
-        self.assertEqual(13, len(list_tasks_page.children))
+        self.assertEqual(13, len(task_list_page.children))
 
         # Simulate a click on the Add Task Button
-        list_tasks_page.children['!button4'].invoke()
+        task_list_page.children['!button4'].invoke()
 
         # Insert text "Test" in to the title field
         task_page.children[TITLE_FIELD_2].delete(0, tk.END)
@@ -107,19 +117,19 @@ class MyGui(unittest.TestCase):
         self.assertEqual(title, expected)
 
         # The window contains 19 elements (table head + two rows + add task button)
-        self.assertEqual(19, len(list_tasks_page.children))
+        self.assertEqual(19, len(task_list_page.children))
 
         # Simulate a click on the first Delete Button
-        list_tasks_page.children[DELETE_BUTTON_1].invoke()
+        task_list_page.children[DELETE_BUTTON_1].invoke()
 
         # The window contains 13 elements (table head + one row + add task button)
-        self.assertEqual(13, len(list_tasks_page.children))
+        self.assertEqual(13, len(task_list_page.children))
 
         # Simulate a click on the second Delete Button
-        list_tasks_page.children[DELETE_BUTTON_2].invoke()
+        task_list_page.children[DELETE_BUTTON_2].invoke()
 
         # The window contains 7 elements (table head + add task button)
-        self.assertEqual(7, len(list_tasks_page.children))
+        self.assertEqual(7, len(task_list_page.children))
 
 
 if __name__ == '__main__':
