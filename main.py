@@ -3,6 +3,7 @@ from notifypy import Notify
 from sqlalchemy import create_engine
 
 from src.app import App, TaskListFrame
+from src.dialogs import Dialogs
 from src.entities import Base
 from src.frames.task_frame import TaskFrame
 from src.gui import gui
@@ -27,11 +28,12 @@ if __name__ == '__main__':
     task_validator = TaskValidator(task_repository)
     Base.metadata.create_all(db)
     notifications = Notification(Notify(enable_logging=True))
+    dialogs = Dialogs()
     gui, master_frame = gui()
     events = Events()
 
-    task_list_frame = TaskListFrame(gui, master_frame, events, task_repository)
-    task_frame = TaskFrame(gui, master_frame, events, task_repository, task_validator, notifications)
+    task_list_frame = TaskListFrame(gui, master_frame, events, dialogs, task_repository)
+    task_frame = TaskFrame(gui, master_frame, events, dialogs, task_repository, task_validator, notifications)
 
     app = App(task_list_frame, task_frame)
 

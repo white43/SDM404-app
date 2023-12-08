@@ -2,6 +2,7 @@ import tkinter as tk
 
 from events import Events
 
+from src.dialogs import Dialogs
 from src.entities import Task
 from src.repositories import TaskRepository
 
@@ -10,9 +11,10 @@ class TaskListFrame(tk.Frame):
     """
     This class is responsible for logic of the task list page
     """
-    def __init__(self, gui: tk.Tk, master: tk.Frame, events: Events, task_repository: TaskRepository):
+    def __init__(self, gui: tk.Tk, master: tk.Frame, events: Events, dialogs: Dialogs, task_repository: TaskRepository):
         tk.Frame.__init__(self, master)
         self.gui: tk.Tk = gui
+        self.dialogs: Dialogs = dialogs
         self.events = events
         self.task_repository: TaskRepository = task_repository
 
@@ -36,8 +38,9 @@ class TaskListFrame(tk.Frame):
         tk.Label(self, text="Title").grid(row=0, column=1)
         tk.Label(self, text="Due date").grid(row=0, column=2)
         tk.Label(self, text="Percent Ready").grid(row=0, column=3)
-        tk.Label(self, text="Edit").grid(row=0, column=4)
-        tk.Label(self, text="Delete").grid(row=0, column=5)
+        tk.Label(self, text="Download").grid(row=0, column=4)
+        tk.Label(self, text="Edit").grid(row=0, column=5)
+        tk.Label(self, text="Delete").grid(row=0, column=6)
 
         row_id: int = 1
 
@@ -47,19 +50,23 @@ class TaskListFrame(tk.Frame):
             due_date = tk.Label(self, text=str(entity.due_date))
             percent_ready = tk.Label(self, text=str(entity.percent_ready))
 
+            state = 'disabled' if entity.file_path is None else 'normal'
+
+            download_button = tk.Button(self, text="Download", state=state, command=lambda eid=entity.id: self.download(eid))
             edit_button = tk.Button(self, text="Edit", command=lambda eid=entity.id: self.edit(eid))
-            delete_button = tk.Button(self, text="Delete", command=lambda eid=entity.id, rid=row_id: self.delete(eid, rid))
+            delete_button = tk.Button(self, name='delete' + str(row_id), text="Delete", command=lambda eid=entity.id, rid=row_id: self.delete(eid, rid))
 
             id.grid(row=row_id, column=0)
             title.grid(row=row_id, column=1)
             due_date.grid(row=row_id, column=2)
             percent_ready.grid(row=row_id, column=3)
-            edit_button.grid(row=row_id, column=4)
-            delete_button.grid(row=row_id, column=5)
+            download_button.grid(row=row_id, column=4)
+            edit_button.grid(row=row_id, column=5)
+            delete_button.grid(row=row_id, column=6)
 
             row_id += 1
 
-        tk.Button(self, text="Add Task", command=self.add).grid(row=row_id, column=4, columnspan=2)
+        tk.Button(self, name='add', text="Add Task", command=self.add).grid(row=row_id, column=4, columnspan=4)
 
     def redraw_page(self) -> None:
         """
@@ -97,3 +104,15 @@ class TaskListFrame(tk.Frame):
             for child in self.grid_slaves(row=row_id):
                 child.grid_forget()
                 child.destroy()
+
+    def download(self, entity_id: int):
+        """
+        This method will save your backup file on disk from the database
+        """
+        entity = self.task_repository.get_by_id(entity_id)
+
+        if isinstance(entity, Task) and entity.file_path is not None:
+            self.dialogs.restore_backup(entity)
+
+
+

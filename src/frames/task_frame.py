@@ -2,13 +2,14 @@ import os
 import sys
 import tkinter as tk
 from datetime import date
-from tkinter import messagebox, filedialog
+from tkinter import messagebox
 
 import tkcalendar as tkc
 from events import Events
 
+from src.dialogs import Dialogs
 from src.entities import Task
-from src.notifications import BaseNotification, Notification
+from src.notifications import BaseNotification
 from src.repositories import TaskRepository
 from src.validation import TaskValidator, ValidationException
 
@@ -23,6 +24,7 @@ class TaskFrame(tk.Frame):
     due_date_entry: tkc.DateEntry
     percent_ready_entry: tk.Scale
     file_path: str | None = None
+    file_mtime: int | None = None
     file_contents: bytes | None = None
 
     def __init__(
@@ -30,6 +32,7 @@ class TaskFrame(tk.Frame):
             gui: tk.Tk,
             master: tk.Frame,
             events: Events,
+            dialogs: Dialogs,
             task_repository: TaskRepository,
             task_validator: TaskValidator,
             notifications: BaseNotification,
@@ -39,6 +42,7 @@ class TaskFrame(tk.Frame):
         """
         tk.Frame.__init__(self, master)
         self.gui: tk.Tk = gui
+        self.dialogs: Dialogs = dialogs
         self.events: Events = events
         self.task_repository: TaskRepository = task_repository
         self.task_validator: TaskValidator = task_validator
@@ -78,10 +82,11 @@ class TaskFrame(tk.Frame):
         percent_ready_label = tk.Label(self, text='Percent Ready', font=('calibre', 10, 'bold'))
         self.percent_ready_entry = tk.Scale(self, from_=0, to=100, variable=percent_ready, orient='horizontal')
 
-        file_label = tk.Label(self, text="Add file", font=('calibre', 10, 'bold'))
+        file_label = tk.Label(self, text="Backup a file", font=('calibre', 10, 'bold'))
         self.file_entry = tk.Button(self, text="File", command=lambda: self.select_file())
-        sub_btn = tk.Button(self, text='Submit', command=lambda: self.save(True if row_id is not None else False))
-        cancel_btn = tk.Button(self, text='Cancel', command=lambda: self.cancel())
+        file_hint = tk.Label(self, text=os.path.basename(self.entity.file_path) if self.entity.file_path else "No file saved", font=('calibre', 8))
+        submit_button = tk.Button(self, name='submit', text='Submit', command=lambda: self.save(True if row_id is not None else False))
+        cancel_button = tk.Button(self, text='Cancel', command=lambda: self.cancel())
 
         name_label.grid(row=0, column=0)
         self.name_entry.grid(row=0, column=1)
@@ -91,8 +96,9 @@ class TaskFrame(tk.Frame):
         self.percent_ready_entry.grid(row=2, column=1)
         file_label.grid(row=3, column=0)
         self.file_entry.grid(row=3, column=1)
-        sub_btn.grid(row=4, column=0)
-        cancel_btn.grid(row=4, column=1)
+        file_hint.grid(row=3, column=2)
+        submit_button.grid(row=4, column=0)
+        cancel_button.grid(row=4, column=1)
 
     def redraw_page(self, row_id: int | None) -> None:
         """
@@ -122,8 +128,7 @@ class TaskFrame(tk.Frame):
 
             if self.file_path is not None and len(self.file_path) > 0:
                 self.entity.file_path = self.file_path
-
-            if self.file_contents is not None and len(self.file_contents) > 0:
+                self.entity.file_mtime = self.file_mtime
                 self.entity.file_contents = self.file_contents
 
             if update:
@@ -135,8 +140,7 @@ class TaskFrame(tk.Frame):
 
                 self.notifications.info(
                     "New task",
-                    "A new task %s with due date on %s has been added" % (
-                    self.entity.title, self.entity.due_date.strftime("%d/%m/%Y"))
+                    "A new task %s with due date on %s has been added" % (self.entity.title, self.entity.due_date.strftime("%d/%m/%Y"))
                 )
 
             self.events.on_show_list_tasks_page()
@@ -156,21 +160,9 @@ class TaskFrame(tk.Frame):
         """
         This method the file chosen by the user and writes its content for further saving to the database
         """
-        filetypes = (
-            ('PDF files', '*.pdf'),
-            ('XSLX files', '*.xslx'),
-            ('ODT files', '*.odt'),
-            ('All files', '*.*'),
-        )
+        file_path, file_mtime, file_contents = self.dialogs.save_backup()
 
-        filename = filedialog.askopenfilename(
-            title='Open a file',
-            initialdir='/',
-            filetypes=filetypes,
-        )
-
-        if os.path.exists(filename):
-            self.file_path = filename
-
-            fd = open(filename, mode="rb")
-            self.file_contents = fd.read()
+        if len(file_contents) > 0:
+            self.file_path = file_path
+            self.file_mtime = file_mtime
+            self.file_contents = file_contents
