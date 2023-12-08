@@ -13,6 +13,10 @@ from src.validation import ValidationException, TaskValidator
 
 
 class App:
+    """
+    This is a base class of the application. It is initialized in the main.app and hold all other classes needed for the
+    application.
+    """
     pages: dict[str, tk.Frame] = {}
 
     list_tasks_page = None
@@ -48,19 +52,31 @@ class App:
         self.show_list_tasks_page()
 
     def show_list_tasks_page(self):
+        """
+        A shorthand method to navigate to the task list page
+        """
         self.list_tasks_page.redraw_page()
         self.list_tasks_page.tkraise()
 
     def show_add_task_page(self):
+        """
+        A shorthand method to navigate to the add task page
+        """
         self.task_page.redraw_page(None)
         self.task_page.tkraise()
 
     def show_edit_task_page(self, row_id: int | None):
+        """
+        A shorthand method to navigate to the edit task page
+        """
         self.task_page.redraw_page(row_id)
         self.task_page.tkraise()
 
 
 class ListTasksPage(tk.Frame):
+    """
+    This class is responsible for logic of the task list page
+    """
     gui: tk.Tk
     controller: App
     task_repository: TaskRepository
@@ -72,11 +88,17 @@ class ListTasksPage(tk.Frame):
         self.task_repository = task_repository
 
     def reset_page(self) -> None:
+        """
+        Destroys all elements on the page to recreate them after saving or editing tasks
+        """
         for child in self.grid_slaves():
             child.grid_forget()
             child.destroy()
 
     def draw_page(self) -> None:
+        """
+        Creates elements of the page from scratch: a table (list) and a button to add new tasks
+        """
         entities = self.task_repository.get_all()
 
         self.grid_columnconfigure(1, weight=1)
@@ -111,21 +133,36 @@ class ListTasksPage(tk.Frame):
         tk.Button(self, text="Add Task", command=self.add).grid(row=row_id, column=4, columnspan=2)
 
     def redraw_page(self) -> None:
+        """
+        A shorthand method to call all necessary underlying methods to draw the page from scratch
+        """
         self.set_title()
         self.reset_page()
         self.draw_page()
 
     def set_title(self):
+        """
+        This method changes the title of the page to Student Task Scheduler after navigating to the task list page
+        """
         self.gui.title("Student Task Scheduler")
 
     def add(self):
+        """
+        This method is called to navigate to the add task page from the task list page
+        """
         self.controller.show_add_task_page()
 
     def edit(self, entity_id: int) -> None:
+        """
+        This method is called to navigate to the edit task page from the task list page
+        """
         self.controller.show_edit_task_page(entity_id)
         pass
 
     def delete(self, entity_id: int, row_id: int) -> None:
+        """
+        This method is called to remove from the database corresponding record from the task list page
+        """
         entity = self.task_repository.get_by_id(entity_id)
 
         if isinstance(entity, Task) and self.task_repository.delete(entity):
@@ -135,6 +172,9 @@ class ListTasksPage(tk.Frame):
 
 
 class TaskPage(tk.Frame):
+    """
+    This class is responsible for logic of the add and edit page
+    """
     gui: tk.Tk
     controller: App
     task_repository: TaskRepository
@@ -157,6 +197,9 @@ class TaskPage(tk.Frame):
             task_validator: TaskValidator,
             notifications: BaseNotification,
     ):
+        """
+        The constructor of the add or edit task page
+        """
         tk.Frame.__init__(self, parent)
         self.gui = gui
         self.controller = controller
@@ -165,11 +208,17 @@ class TaskPage(tk.Frame):
         self.notifications = notifications
 
     def reset_page(self) -> None:
+        """
+        A shorthand method to call all necessary underlying methods to draw the page from scratch
+        """
         for child in self.grid_slaves():
             child.grid_forget()
             child.destroy()
 
     def draw_page(self, row_id: int | None) -> None:
+        """
+        This class creates the add or edit page from scratch depending on which page was requested
+        """
         title: tk.StringVar = tk.StringVar()
         due: date = date.today()
         percent_ready = tk.IntVar()
@@ -210,17 +259,26 @@ class TaskPage(tk.Frame):
         cancel_btn.grid(row=4, column=1)
 
     def redraw_page(self, row_id: int | None) -> None:
+        """
+        Destroys all elements on the page to recreate them after saving or editing tasks
+        """
         self.reset_page()
         self.set_title(row_id)
         self.draw_page(row_id)
 
     def set_title(self, row_id: int | None):
+        """
+        This method changes the title of the page to Add Task or Edit Task depending on which the user is navigating
+        """
         if row_id is None:
             self.gui.title("Add Task | Student Task Scheduler")
         else:
             self.gui.title("Edit Task | Student Task Scheduler")
 
     def save(self, update: bool):
+        """
+        This method creates a new record or updates a record depending on which page the user is using
+        """
         try:
             self.entity.title = self.name_entry.get()
             self.entity.due_date = self.due_date_entry.get_date()
@@ -253,9 +311,15 @@ class TaskPage(tk.Frame):
             print("Error: could not save " + repr(e), file=sys.stderr)
 
     def cancel(self):
+        """
+        This method sends users back to the task list page
+        """
         self.controller.show_list_tasks_page()
 
     def select_file(self):
+        """
+        This method the file chosen by the user and writes its content for further saving to the database
+        """
         filetypes = (
             ('PDF files', '*.pdf'),
             ('XSLX files', '*.xslx'),
