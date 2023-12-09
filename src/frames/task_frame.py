@@ -164,7 +164,7 @@ class TaskFrame(tk.Frame):
         """
         file_path, file_mtime, file_contents = self.dialogs.save_backup()
 
-        if len(file_contents) > 0:
+        if file_contents is not None and len(file_contents) > 0:
             self.file_path = file_path
             self.file_mtime = file_mtime
             self.file_contents = file_contents

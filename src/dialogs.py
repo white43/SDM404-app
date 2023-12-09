@@ -32,6 +32,8 @@ class Dialogs:
 
             return filename, file_mtime, file_contents
 
+        return None, None, None
+
     def restore_backup(self, entity: Task) -> None:
         """
         This method takes a record from the database and saves its file contents to a location specified by the user
