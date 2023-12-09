@@ -39,12 +39,17 @@ class Dialogs:
         This method takes a record from the database and saves its file contents to a location specified by the user
         """
         if isinstance(entity, Task) and entity.file_path is not None:
-            file = filedialog.asksaveasfile(
-                mode='wb',
-                title='Save as',
-                initialdir=os.path.expanduser("~"),
-                filetypes=self.filetypes,
-            )
+            file = None
+
+            try:
+                file = filedialog.asksaveasfile(
+                    mode='wb',
+                    title='Save as',
+                    initialdir=os.path.expanduser("~"),
+                    filetypes=self.filetypes,
+                )
+            except Exception as e:
+                messagebox.showerror("Error", "Error occurred: " + str(e))
 
             if isinstance(file, BufferedWriter):
                 written = file.write(entity.file_contents)
