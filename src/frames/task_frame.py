@@ -53,6 +53,11 @@ class TaskFrame(tk.Frame):
         """
         A shorthand method to call all necessary underlying methods to draw the page from scratch
         """
+        # Reset file contents on frame load to avoid saving it accidentally again
+        self.file_path = None
+        self.file_mtime = None
+        self.file_contents = None
+
         for child in self.grid_slaves():
             child.grid_forget()
             child.destroy()
