@@ -24,7 +24,6 @@ class TaskFrame(tk.Frame):
     due_date_entry: tkc.DateEntry
     percent_ready_entry: tk.Scale
     file_path: str | None = None
-    file_mtime: int | None = None
     file_contents: bytes | None = None
     file_hint: tk.StringVar | None = None
 
@@ -55,7 +54,6 @@ class TaskFrame(tk.Frame):
         """
         # Reset file contents on frame load to avoid saving it accidentally again
         self.file_path = None
-        self.file_mtime = None
         self.file_contents = None
 
         for child in self.grid_slaves():
@@ -135,7 +133,6 @@ class TaskFrame(tk.Frame):
 
             if self.file_path is not None and len(self.file_path) > 0:
                 self.entity.file_path = self.file_path
-                self.entity.file_mtime = self.file_mtime
                 self.entity.file_contents = self.file_contents
 
             if update:

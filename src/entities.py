@@ -17,7 +17,6 @@ class Task(Base):
     percent_ready: Mapped[int] = mapped_column(SmallInteger)
     due_date: Mapped[datetime.date] = mapped_column(Date(), server_default=func.now())
     file_path: Mapped[str] = mapped_column(String(255), nullable=True)
-    file_mtime: Mapped[int] = mapped_column(Integer(), nullable=True)
     file_contents: Mapped[str] = mapped_column(BLOB(), nullable=True)
 
     def __repr__(self) -> str:
