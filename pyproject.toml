@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+    "ignore::RuntimeWarning",
+    "ignore:coroutine 'MyGui._start_app' was never awaited",
+]
