@@ -26,6 +26,7 @@ class TaskFrame(tk.Frame):
     file_path: str | None = None
     file_mtime: int | None = None
     file_contents: bytes | None = None
+    file_hint: tk.StringVar | None = None
 
     def __init__(
             self,
@@ -84,7 +85,8 @@ class TaskFrame(tk.Frame):
 
         file_label = tk.Label(self, text="Backup a file", font=('calibre', 10, 'bold'))
         self.file_entry = tk.Button(self, text="File", command=lambda: self.select_file())
-        file_hint = tk.Label(self, text=os.path.basename(self.entity.file_path) if self.entity.file_path else "No file saved", font=('calibre', 8))
+        self.file_hint = tk.StringVar(value=os.path.basename(self.entity.file_path) if self.entity.file_path else "No file saved")
+        file_hint = tk.Label(self, name='file_hint', textvariable=self.file_hint, font=('calibre', 8))
         submit_button = tk.Button(self, name='submit', text='Submit', command=lambda: self.save(True if row_id is not None else False))
         cancel_button = tk.Button(self, text='Cancel', command=lambda: self.cancel())
 
@@ -166,3 +168,4 @@ class TaskFrame(tk.Frame):
             self.file_path = file_path
             self.file_mtime = file_mtime
             self.file_contents = file_contents
+            self.file_hint.set(os.path.basename(file_path))
